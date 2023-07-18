@@ -10,6 +10,7 @@ anyhow = { version = "1.0.72", features = ["backtrace"] }
 hudsucker = "0.20.0"
 hyper-rustls = "0.24.1"
 ipnet = { version = "2.8.0", features = ["serde"] }
+prefix-trie = "0.2.4"
 rcgen = "0.10.0" # Version used by hudsucker
 rustls-pemfile = "1.0.3"
 serde = { version = "1.0.171", features = ["derive"] }

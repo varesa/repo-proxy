@@ -34,7 +34,6 @@ impl Config {
             None => return Err(anyhow::Error::msg("Missing config file as parameter")),
         };
         let config = Config::try_from_file(PathBuf::from(config_path))?;
-        println!("{config:#?}");
         Ok(config)
     }
 }
