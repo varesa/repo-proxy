@@ -1,0 +1,32 @@
+use std::{fs::read_to_string};
+use std::path::PathBuf;
+use serde::Deserialize;
+
+#[derive(Deserialize, Debug)]
+pub struct Paths {
+    pub data: String,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct Config {
+    pub paths: Paths,
+}
+
+impl Config {
+    pub fn try_from_file(path: PathBuf) -> Result<Self, anyhow::Error> {
+        let conf_string = read_to_string(path)?;
+        let config = toml::from_str(&conf_string)?;
+        Ok(config)
+    }
+
+    pub fn try_from_args() -> Result<Self, anyhow::Error> {
+        let args: Vec<String> = std::env::args().collect();
+        let config_path = match args.get(1) {
+            Some(path) => path,
+            None => return Err(anyhow::Error::msg("Missing config file as parameter")),
+        };
+        let config = Config::try_from_file(PathBuf::from(config_path))?;
+        Ok(config)
+    }
+}
+

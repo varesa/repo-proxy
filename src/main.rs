@@ -1,4 +1,7 @@
 use rcgen::{CertificateParams, IsCa, DistinguishedName, Certificate, RcgenError};
+use crate::config::Config;
+
+mod config;
 
 fn build_ca() -> Result<Certificate, RcgenError> {
     let mut dn = DistinguishedName::new();
@@ -11,6 +14,7 @@ fn build_ca() -> Result<Certificate, RcgenError> {
     Certificate::from_params(params)
 }
 
-fn main() {
-    println!("Hello, world!");
+fn main() -> Result<(), anyhow::Error> {
+    let config = Config::try_from_args()?;
+    Ok(())
 }
