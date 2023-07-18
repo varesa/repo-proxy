@@ -1,8 +1,9 @@
 use std::net::SocketAddr;
 use hudsucker::async_trait::async_trait;
 use hudsucker::certificate_authority::RcgenAuthority;
-use hudsucker::{HttpHandler, NoopHandler};
+use hudsucker::{HttpContext, HttpHandler, NoopHandler, RequestOrResponse};
 use hudsucker::hyper::client::HttpConnector;
+use hudsucker::hyper::{Body, Method, Request, Response};
 use hyper_rustls::HttpsConnector;
 use crate::ca::Ca;
 
@@ -17,7 +18,34 @@ struct Handler;
 
 #[async_trait]
 impl HttpHandler for Handler {
+    async fn handle_request(
+        &mut self,
+        _ctx: &HttpContext,
+        req: Request<Body>,
+    ) -> RequestOrResponse {
+        if req.method() == Method::CONNECT {
+            return req.into(); // We are not interested in the TCP proxy layer -> ignore
+        }
+        //println!("{:?}", req);
 
+        let uri = req.uri();
+        if uri.path().ends_with(".rpm") {
+            println!("PACKAGE: {uri}");
+        } else if uri.path().contains("repodata") {
+            println!("REPODATA: {uri}");
+        } else if uri.path().contains("metalink") {
+            println!("METALINK: {uri}");
+        } else {
+            println!("!! UNKNOWN !! {uri}");
+        }
+
+        req.into()
+    }
+
+    async fn handle_response(&mut self, _ctx: &HttpContext, res: Response<Body>) -> Response<Body> {
+        //println!("{:?}", res);
+        res
+    }
 }
 
 pub struct Proxy  {
