@@ -1,4 +1,5 @@
 use std::path::Path;
+use hudsucker::rustls;
 use rcgen::{CertificateParams, IsCa, DistinguishedName, Certificate, RcgenError};
 
 const KEY_FILE: &str = "ca.key";
@@ -15,8 +16,24 @@ fn new_keypair() -> Result<Certificate, RcgenError> {
     Certificate::from_params(params)
 }
 
+enum KeyType {
+    Private,
+    Public,
+}
+
+fn read_pem(path: &Path, key_type: KeyType) -> Result<Vec<u8>, anyhow::Error> {
+    let pem = std::fs::read_to_string(path)?;
+    let mut bytes = pem.as_bytes();
+    let der = match key_type {
+        KeyType::Private => rustls_pemfile::pkcs8_private_keys(&mut bytes)?.remove(0),
+        KeyType::Public => rustls_pemfile::certs(&mut bytes)?.remove(0),
+    };
+    Ok(der)
+}
+
 pub struct Ca {
-    certificate: Certificate
+    pub certificate: rustls::Certificate,
+    pub private_key: rustls::PrivateKey,
 }
 
 impl Ca {
@@ -25,7 +42,10 @@ impl Ca {
         let public_key_path = datadir.join(CERT_FILE);
         assert_eq!(private_key_path.is_file(), public_key_path.is_file());
         if public_key_path.is_file() {
-            todo!()
+            Ok(Ca {
+                certificate: rustls::Certificate(read_pem(&public_key_path, KeyType::Public)?),
+                private_key: rustls::PrivateKey(read_pem(&private_key_path, KeyType::Private)?),
+            })
         } else {
             let certificate = new_keypair()?;
             let private_key_data = certificate.serialize_private_key_pem();
@@ -35,7 +55,8 @@ impl Ca {
             std::fs::write(public_key_path, public_key_data)?;
 
             Ok(Ca {
-                certificate
+                certificate: rustls::Certificate(certificate.serialize_der()?),
+                private_key: rustls::PrivateKey(certificate.serialize_private_key_der()),
             })
         }
     }

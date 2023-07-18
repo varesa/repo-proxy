@@ -8,6 +8,9 @@ edition = "2021"
 [dependencies]
 anyhow = { version = "1.0.72", features = ["backtrace"] }
 hudsucker = "0.20.0"
+hyper-rustls = "0.24.1"
 rcgen = "0.10.0" # Version used by hudsucker
+rustls-pemfile = "1.0.3"
 serde = { version = "1.0.171", features = ["derive"] }
+tokio = { version = "1.29.1", features = ["full"] }
 toml = "0.7.6"
