@@ -4,7 +4,7 @@ use serde::Deserialize;
 
 #[derive(Deserialize, Debug)]
 pub struct Paths {
-    pub data: String,
+    pub data: PathBuf,
 }
 
 #[derive(Deserialize, Debug)]
