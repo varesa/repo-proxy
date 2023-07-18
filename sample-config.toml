@@ -1,2 +1,10 @@
 [paths]
 data = "testdata/"
+
+[[views]]
+name = "default"
+source = ["0.0.0.0/0"]
+
+[[views]]
+name = "testing"
+source = ["127.0.0.0/8", "::1/128"]

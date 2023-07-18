@@ -1,5 +1,6 @@
 use std::{fs::read_to_string};
 use std::path::PathBuf;
+use ipnet::IpNet;
 use serde::Deserialize;
 
 #[derive(Deserialize, Debug)]
@@ -8,8 +9,15 @@ pub struct Paths {
 }
 
 #[derive(Deserialize, Debug)]
+pub struct View {
+    pub name: String,
+    pub source: Vec<IpNet>,
+}
+
+#[derive(Deserialize, Debug)]
 pub struct Config {
     pub paths: Paths,
+    pub views: Vec<View>,
 }
 
 impl Config {
@@ -26,6 +34,7 @@ impl Config {
             None => return Err(anyhow::Error::msg("Missing config file as parameter")),
         };
         let config = Config::try_from_file(PathBuf::from(config_path))?;
+        println!("{config:#?}");
         Ok(config)
     }
 }
