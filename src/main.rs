@@ -4,6 +4,7 @@ mod ca;
 mod config;
 mod proxy;
 mod prefix_match;
+mod request_meta;
 
 #[tokio::main]
 async fn main() -> Result<(), anyhow::Error> {

@@ -8,7 +8,7 @@ pub struct Paths {
     pub data: PathBuf,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Clone, Deserialize, Debug)]
 pub struct View {
     pub name: String,
     pub source: Vec<IpNet>,

@@ -7,6 +7,7 @@ use hudsucker::hyper::{Body, http, Method, Request, Response};
 use hyper_rustls::HttpsConnector;
 use crate::ca::Ca;
 use crate::prefix_match::PrefixMatcher;
+use crate::request_meta::{RequestMetadata, RequestMetadataBuidler, RequestType};
 
 static mut PREFIX_MATCHER: Option<PrefixMatcher> = None;
 
@@ -16,8 +17,12 @@ async fn shutdown_signal() {
         .expect("Failed to install CTRL+C signal handler");
 }
 
-#[derive(Clone)]
-struct Handler;
+
+
+#[derive(Clone, Default, Debug)]
+struct Handler {
+    request_metadata: Option<RequestMetadata>,
+}
 
 #[async_trait]
 impl HttpHandler for Handler {
@@ -26,6 +31,8 @@ impl HttpHandler for Handler {
         ctx: &HttpContext,
         req: Request<Body>,
     ) -> RequestOrResponse {
+        let mut metabuilder = RequestMetadataBuidler::new();
+
         if req.method() == Method::CONNECT {
             return req.into(); // We are not interested in the TCP proxy layer -> ignore
         }
@@ -37,25 +44,32 @@ impl HttpHandler for Handler {
                 return RequestOrResponse::Response(http::Response::builder().status(403).body(Body::empty()).unwrap())
             }
         };
+        metabuilder.view_name(view_name.clone());
 
         print!("[{view_name}] ");
 
         let uri = req.uri();
+        metabuilder.uri(uri.clone());
         if uri.path().ends_with(".rpm") {
             println!("PACKAGE: {uri}");
+            metabuilder.request_type(RequestType::Package);
         } else if uri.path().contains("repodata") {
             println!("REPODATA: {uri}");
+            metabuilder.request_type(RequestType::Repodata);
         } else if uri.path().contains("metalink") {
             println!("METALINK: {uri}");
+            metabuilder.request_type(RequestType::Metalink);
         } else {
             println!("!! UNKNOWN !! {uri}");
+            metabuilder.request_type(RequestType::Unknown);
         }
 
+        self.request_metadata = Some(metabuilder.build());
         req.into()
     }
 
     async fn handle_response(&mut self, _ctx: &HttpContext, res: Response<Body>) -> Response<Body> {
-        //println!("{:?}", res);
+        let _request_meta = self.request_metadata.as_ref().expect("No request metadata set for response");
         res
     }
 }
@@ -71,7 +85,7 @@ impl Proxy {
             .with_addr(SocketAddr::from(([0,0,0,0], 8777)))
             .with_rustls_client()
             .with_ca(rcgen)
-            .with_http_handler(Handler)
+            .with_http_handler(Handler::default())
             .build();
 
         unsafe {
