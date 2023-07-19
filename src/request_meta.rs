@@ -14,7 +14,7 @@ macro_rules! builder {
         #[derive(Clone, Debug)]
         pub struct $name {
             $(
-                $var: $vartype,
+                pub $var: $vartype,
             )+
         }
 

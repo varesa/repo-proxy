@@ -1,11 +1,12 @@
 use std::net::SocketAddr;
 use hudsucker::async_trait::async_trait;
 use hudsucker::certificate_authority::RcgenAuthority;
-use hudsucker::{HttpContext, HttpHandler, NoopHandler, RequestOrResponse};
+use hudsucker::{HttpContext, HttpHandler, hyper, NoopHandler, RequestOrResponse};
 use hudsucker::hyper::client::HttpConnector;
 use hudsucker::hyper::{Body, http, Method, Request, Response};
 use hyper_rustls::HttpsConnector;
 use crate::ca::Ca;
+use crate::metalink::Metalink;
 use crate::prefix_match::PrefixMatcher;
 use crate::request_meta::{RequestMetadata, RequestMetadataBuidler, RequestType};
 
@@ -69,8 +70,19 @@ impl HttpHandler for Handler {
     }
 
     async fn handle_response(&mut self, _ctx: &HttpContext, res: Response<Body>) -> Response<Body> {
-        let _request_meta = self.request_metadata.as_ref().expect("No request metadata set for response");
-        res
+        let request_meta = self.request_metadata.as_ref().expect("No request metadata set for response");
+        match request_meta.request_type {
+            RequestType::Metalink => {
+                let mut parts = res.into_parts();
+                let body_bytes = hyper::body::to_bytes(&mut parts.1).await.expect("Failed to get response body");
+
+                let metalink = Metalink::try_from_string(&body_bytes);
+                println!("{metalink:?}");
+                
+                Response::from_parts(parts.0, Body::from(body_bytes))
+            }
+            _ => res
+        }
     }
 }
 

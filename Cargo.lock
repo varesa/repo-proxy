@@ -1253,6 +1253,7 @@ dependencies = [
  "serde",
  "tokio",
  "toml",
+ "xml",
 ]
 
 [[package]]
@@ -2157,6 +2158,21 @@ dependencies = [
  "thiserror",
  "time",
 ]
+
+[[package]]
+name = "xml"
+version = "0.8.10"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5cb5b0add8d5aaa69357818de5f3b60104a62ef345dca81d0947e2148347a7f7"
+dependencies = [
+ "xml-rs",
+]
+
+[[package]]
+name = "xml-rs"
+version = "0.8.15"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5a56c84a8ccd4258aed21c92f70c0f6dea75356b6892ae27c24139da456f9336"
 
 [[package]]
 name = "yasna"

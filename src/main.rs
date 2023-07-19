@@ -2,6 +2,7 @@ use crate::config::Config;
 
 mod ca;
 mod config;
+mod metalink;
 mod proxy;
 mod prefix_match;
 mod request_meta;

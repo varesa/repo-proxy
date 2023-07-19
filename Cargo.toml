@@ -16,3 +16,4 @@ rustls-pemfile = "1.0.3"
 serde = { version = "1.0.171", features = ["derive"] }
 tokio = { version = "1.29.1", features = ["full"] }
 toml = "0.7.6"
+xml = "0.8.10"
