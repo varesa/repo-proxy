@@ -59,6 +59,29 @@ impl XmlNode {
             return Err(anyhow::Error::msg(format!("XmlNode: Expected StartElement, got {:?}", events)));
         }
     }
+
+    pub fn name(&self) -> String {
+        if let XmlEvent::StartElement { name, ..} = &self.start_element {
+            name.local_name.clone()
+        } else {
+            panic!("XmlNode: Expected StartElement, got {:?}", &self.start_element);
+        }
+    }
+
+    pub fn find_one(&self, name: &str) -> Option<&XmlNode> {
+        self.children.iter().find(|child| child.name() == name)
+    }
+
+    pub fn find_all(&self, name: &str) -> Vec<&XmlNode> {
+        self.children.iter().filter(|child| child.name() == name).collect()
+    }
+
+    pub fn filter_children_in_place<P>(&mut self, predicate: P) where
+        P: FnMut(&Self) -> bool,
+    {
+        let new_children: Vec<XmlNode> = self.children.clone().into_iter().filter(predicate).collect();
+        self.children = new_children;
+    }
 }
 
 impl Debug for XmlNode {
