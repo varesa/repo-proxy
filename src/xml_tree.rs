@@ -20,6 +20,8 @@ impl XmlNode {
     /// Recursively create XmlNodes from a linear list of XmlEvents
     pub fn try_from_events(events: &[XmlEvent]) -> Result<(Self, &[XmlEvent]), anyhow::Error> {
         assert!(!events.is_empty(), "XmlNode::try_from_events called without any events");
+
+        // Add a safeguard against infinite looping and skyrocketing memory usage
         unsafe { LIMIT += 1; assert!(LIMIT < 10000) }
 
         // A node can have either text content, child nodes, or neither
