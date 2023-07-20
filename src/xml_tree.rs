@@ -1,13 +1,14 @@
+use std::fmt::{Debug, Formatter, Write};
 use xml::reader::XmlEvent;
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct XmlNode {
     start_element: XmlEvent,
     characters: Option<String>,
     children: Vec<XmlNode>,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct XmlTree {
     start_document: XmlEvent,
     root_node: XmlNode,
@@ -44,6 +45,7 @@ impl XmlNode {
                         children.push(node);
                     },
                     XmlEvent::EndElement { .. } => {
+                        assert!(!(characters.is_some() && !children.is_empty()));
                         return Ok((XmlNode {
                             start_element: events[0].clone(),
                             characters,
@@ -55,6 +57,31 @@ impl XmlNode {
             }
         } else {
             return Err(anyhow::Error::msg(format!("XmlNode: Expected StartElement, got {:?}", events)));
+        }
+    }
+}
+
+impl Debug for XmlNode {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        let mut output = String::new();
+        if let XmlEvent::StartElement { name, .. } = &self.start_element {
+            if let Some(s) = &self.characters {
+                output.write_str(&format!(r#"  <{} ...>"{}"</{}>"#, name.local_name, s, name.local_name)).unwrap();
+            } else if !&self.children.is_empty() {
+                output.write_str(&format!("  <{} ...>\n", name.local_name)).unwrap();
+                for child in &self.children {
+                    let debug = format!("{:#?}", child);
+                    for line in debug.lines() {
+                        output.write_str(&format!("  {line}\n")).unwrap();
+                    }
+                }
+                output.write_str(&format!("  </{}>", name.local_name)).unwrap();
+            } else {
+                output.write_str(&format!("  <{} .../>", name.local_name)).unwrap();
+            }
+            f.write_str(&output)
+        } else {
+            panic!("Invalid start element");
         }
     }
 }
@@ -89,5 +116,20 @@ impl XmlTree {
             start_document,
             root_node,
         })
+    }
+}
+
+impl Debug for XmlTree {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        let mut out = String::new();
+        out.write_str("XmlTree {\n").unwrap();
+        out.write_str(&format!("    start_document: {:?}\n", &self.start_document)).unwrap();
+        out.write_str("    root_node:\n").unwrap();
+        let node = format!("{:#?}", &self.root_node);
+        for line in node.lines() {
+            out.write_str(&format!("      {line}\n")).unwrap();
+        }
+        out.write_str("}").unwrap();
+        f.write_str(&out)
     }
 }
