@@ -76,11 +76,14 @@ impl HttpHandler for Handler {
                 let mut parts = res.into_parts();
                 let body_bytes = hyper::body::to_bytes(&mut parts.1).await.expect("Failed to get response body");
 
-                let metalink = Metalink::try_from_string(&body_bytes);
+                let metalink = Metalink::try_from_bytes(&body_bytes);
                 println!("{metalink:?}");
-                
+
                 Response::from_parts(parts.0, Body::from(body_bytes))
-            }
+            },
+            RequestType::Mirrorlist => {
+                todo!()
+            },
             _ => res
         }
     }

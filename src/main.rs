@@ -6,6 +6,7 @@ mod metalink;
 mod proxy;
 mod prefix_match;
 mod request_meta;
+mod xml_tree;
 
 #[tokio::main]
 async fn main() -> Result<(), anyhow::Error> {
