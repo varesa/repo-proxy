@@ -3,15 +3,15 @@ use xml::reader::XmlEvent;
 
 #[derive(Clone)]
 pub struct XmlNode {
-    start_element: XmlEvent,
-    characters: Option<String>,
-    children: Vec<XmlNode>,
+    pub start_element: XmlEvent,
+    pub characters: Option<String>,
+    pub children: Vec<XmlNode>,
 }
 
 #[derive(Clone)]
 pub struct XmlTree {
-    start_document: XmlEvent,
-    root_node: XmlNode,
+    pub start_document: XmlEvent,
+    pub root_node: XmlNode,
 }
 
 static mut LIMIT: usize = 0;
@@ -68,12 +68,12 @@ impl XmlNode {
         }
     }
 
-    pub fn find_one(&self, name: &str) -> Option<&XmlNode> {
-        self.children.iter().find(|child| child.name() == name)
+    pub fn find_one(&mut self, name: &str) -> Option<&mut XmlNode> {
+        self.children.iter_mut().find(|child| child.name() == name)
     }
 
-    pub fn find_all(&self, name: &str) -> Vec<&XmlNode> {
-        self.children.iter().filter(|child| child.name() == name).collect()
+    pub fn find_all(&mut self, name: &str) -> Vec<&mut XmlNode> {
+        self.children.iter_mut().filter(|child| child.name() == name).collect()
     }
 
     pub fn filter_children_in_place<P>(&mut self, predicate: P) where
@@ -87,25 +87,21 @@ impl XmlNode {
 impl Debug for XmlNode {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         let mut output = String::new();
-        if let XmlEvent::StartElement { name, .. } = &self.start_element {
-            if let Some(s) = &self.characters {
-                output.write_str(&format!(r#"  <{} ...>"{}"</{}>"#, name.local_name, s, name.local_name)).unwrap();
-            } else if !&self.children.is_empty() {
-                output.write_str(&format!("  <{} ...>\n", name.local_name)).unwrap();
-                for child in &self.children {
-                    let debug = format!("{:#?}", child);
-                    for line in debug.lines() {
-                        output.write_str(&format!("  {line}\n")).unwrap();
-                    }
+        if let Some(s) = &self.characters {
+            output.write_str(&format!(r#"  <{} ...>"{}"</{}>"#, self.name(), s, self.name())).unwrap();
+        } else if !&self.children.is_empty() {
+            output.write_str(&format!("  <{} ...>\n", self.name())).unwrap();
+            for child in &self.children {
+                let debug = format!("{:#?}", child);
+                for line in debug.lines() {
+                    output.write_str(&format!("  {line}\n")).unwrap();
                 }
-                output.write_str(&format!("  </{}>", name.local_name)).unwrap();
-            } else {
-                output.write_str(&format!("  <{} .../>", name.local_name)).unwrap();
             }
-            f.write_str(&output)
+            output.write_str(&format!("  </{}>", self.name())).unwrap();
         } else {
-            panic!("Invalid start element");
+            output.write_str(&format!("  <{} .../>", self.name())).unwrap();
         }
+        f.write_str(&output)
     }
 }
 
